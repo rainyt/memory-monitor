@@ -1,0 +1,11 @@
+{
+	"name": "memory-monitor",
+	"url": "",
+	"license": "MIT",
+	"tags": [],
+	"description": "内存记忆器",
+	"version": "0.0.1",
+	"releasenote": "可用于一些简单的场景进行内存引用，检查是否有存在内存泄漏的情况",
+	"contributors": [ "rainy" ],
+	"classPath": "src"
+}
