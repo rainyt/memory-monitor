@@ -1,9 +1,33 @@
+import haxe.Exception;
 import haxe.ds.WeakMap;
 
 /**
  * 内存监视器，目前暂仅支持JS
  */
 class MemoryMonitor {
+	private static var __isSupport:Null<Bool> = null;
+
+	/**
+	 * 判断是否支持内存监视器
+	 * @return Bool
+	 */
+	public static function isSupport():Bool {
+		if (__isSupport != null)
+			return __isSupport;
+		#if js
+		try {
+			new WeakRef({});
+			__isSupport = true;
+		} catch (e:Exception) {
+			trace("[WeakRef]", e);
+			__isSupport = false;
+		}
+		#else
+		__isSupport = true;
+		#end
+		return __isSupport;
+	}
+
 	/**
 	 * 一个弱引用的Map
 	 */
@@ -23,6 +47,8 @@ class MemoryMonitor {
 	 * @param obj 
 	 */
 	public function watch(obj:Dynamic):Void {
+		if (!isSupport())
+			return;
 		var c = Type.getClass(obj);
 		var cname = Type.getClassName(c);
 		_map.set(#if js new WeakRef(obj) #else obj #end, cname);
@@ -33,6 +59,8 @@ class MemoryMonitor {
 	 * @param obj 
 	 */
 	public function unwatch(obj:Dynamic):Void {
+		if (!isSupport())
+			return;
 		var c = Type.getClass(obj);
 		var cname = Type.getClassName(c);
 		for (key => value in _map) {
@@ -47,6 +75,8 @@ class MemoryMonitor {
 	 * @return String
 	 */
 	public function log():String {
+		if (!isSupport())
+			return "Not Support";
 		var logs:Array<{
 			name:String,
 			counts:Int
@@ -80,7 +110,12 @@ class MemoryMonitor {
 	}
 }
 
-#if js
+#if weixin
+@:native("WXWeakRef") extern class WeakRef {
+	public function new(element:Dynamic):Void;
+	public function deref():Dynamic;
+}
+#elseif js
 @:native("WeakRef") extern class WeakRef {
 	public function new(element:Dynamic):Void;
 	public function deref():Dynamic;
