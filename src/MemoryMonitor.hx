@@ -71,6 +71,39 @@ class MemoryMonitor {
 	}
 
 	/**
+	 * 默认为300帧检查一次（5秒）
+	 */
+	public var checkStepFrame = 300;
+
+	private var __checkTimes = 0;
+
+	/**
+	 * 当需要更新引用状态时，应该更新它
+	 */
+	public function run():Void {
+		if (!isSupport())
+			return;
+		__checkTimes++;
+		if (__checkTimes >= checkStepFrame) {
+			__checkTimes = 0;
+			for (key => value in _map) {
+				#if js
+				var isAvailable = key.deref() != null;
+				if (!isAvailable) {
+					_map.remove(key);
+					continue;
+				}
+				#else
+				if (_map.get(key) == null) {
+					_map.remove(key);
+					continue;
+				}
+				#end
+			}
+		}
+	}
+
+	/**
 	 * 将内存状况输出
 	 * @return String
 	 */
@@ -86,6 +119,11 @@ class MemoryMonitor {
 			#if js
 			var isAvailable = key.deref() != null;
 			if (!isAvailable) {
+				_map.remove(key);
+				continue;
+			}
+			#else
+			if (_map.get(key) == null) {
 				_map.remove(key);
 				continue;
 			}
